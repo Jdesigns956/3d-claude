@@ -1,91 +1,89 @@
 # The pipeline, and what happened to the 15 repos
 
-Short version: one engine, six agents, one GPU queue. Of the 15 repos, 4 are wired in, 3 are
-optional later, and 8 are left out on purpose: they're for a different engine, or they generate
-video instead of game assets.
+The first version of this repo treated the list as a game studio. For motion graphics and 3D models the list
+looks different: more of it is useful, and the engine changes. Blender replaces the game engine, and five of the 15
+become useful. Eight stay out on purpose.
 
 ## How it runs
 
 ```
- you ── pitch ──▶ Claude Code (/studio)                         GitHub Actions
-                   │  creative-director · game-designer          on every push: Godot import,
-                   │  gameplay-programmer · technical-artist     parse, smoke test, pipeline tests
-                   │  audio-director · qa-tester                 on tag v*: ship gate, Linux +
-                   │                                             Windows export, attach to release
-                   ├─ edits game/ (Godot 4.6)
-                   │    post-edit hook: parse-check every .gd
-                   │    stop hook: can't finish until scripts/check.sh passes
-                   │    godot-mcp: run the game, read runtime errors
+ you ── brief ──▶ Claude Code (/studio)
+                   │  art-director · motion-designer · modeler · sound-designer · qa-reviewer
+                   │
+                   ├─ writes pieces/*.py            post-edit hook: build the piece + one tiny QA'd frame on every save
+                   │  renders previews on the CPU   Stop hook: can't finish until scripts/check.sh passes
+                   │  opens its own contact sheets, critiques them, revises
                    │
                    └─ pipeline/jobs/pending/*.json ──git──▶ GPU machine: assets.py work --watch
-                        + placeholders at final paths            ACE-Step · TRELLIS.2 · CHORD · Foley
-                                                                 │
-                   game/assets/generated/ + ledger.json ◀──git──┘
+                        render · music · foley · mesh · pbr                Blender finals (Cycles GPU)
+                                                                           ACE-Step · Foley · TRELLIS.2 · CHORD
+                   deliverables/ + assets/generated/ + ledger ◀──git──┘
+                                                                  GitHub Actions: every push builds each piece and runs QA
 ```
 
-Placeholders and final assets share the same path, so the game always runs, and real assets
-replace the stand-ins with no scene changes when the worker pushes them.
-
-Human gates: **A** pick a concept, **B** play the vertical slice, **C** approve a release.
-With `/studio auto ...` the creative-director agent decides A and B; C always comes back to you.
+Human gates: **A** pick a direction from the rendered concept sheet, **C** approve the files. `/studio auto` lets the
+art-director agent take gate A; C always comes back to you.
 
 ## Verdicts
 
 | # | Repo | Verdict | Why |
 |---|------|---------|-----|
-| 01 | [Claude-Code-Game-Studios](https://github.com/Donchitos/Claude-Code-Game-Studios) | Borrowed the idea, not the 49 agents | The studio hierarchy is the right shape, but 49 roles is mostly overhead for one person: each agent starts cold and costs tokens. Six roles here cover it. MIT, so you can drop it in later if you want the full org chart. |
-| 02-05 | UnrealClaude, Unreal_mcp, VibeUE, unreal-engine-skills | Out (Unreal path) | All good if you commit to Unreal. Unreal needs a big Windows box with the editor open, and minute-long C++ builds. That's the opposite of "as automatic as possible". |
-| 06 | UnrealGenAISupport | Out | LLM-driven NPCs are a design decision with per-player API costs, not a pipeline step. |
-| 07 | [Audio2Face-3D](https://github.com/NVIDIA/Audio2Face-3D) | Later, maybe | Only matters for talking 3D faces. The SDK is MIT, the model weights use the NVIDIA Open Model License, and the plugin targets UE5, so Godot needs a blendshape import step. |
-| 08 | Unity-MCP | Alternative engine | If you go Unity, start with Unity's official Claude Code plugin (Sept 2026) and add Unity-MCP for in-game/runtime AI. |
-| 09 | ml-agents | Out on Godot | Unity only. The Godot equivalent is godot_rl_agents, if a design ever needs trained NPCs. |
-| 10 | [godot-mcp](https://github.com/Coding-Solo/godot-mcp) | **In** | `.mcp.json`. Runs the project, reads debug output, does scene/node operations. MIT. |
-| 11 | [CHORD](https://github.com/ubisoft/ubisoft-laforge-chord) | **In, prototype only** | Great image → PBR maps, but **research-only license**. The ledger marks its output `commercial_ok: false` and the ship gate blocks it. |
-| 12 | [ACE-Step 1.5](https://github.com/ace-step/ACE-Step-1.5) | **In** | MIT, small VRAM footprint, and the model card allows commercial use of generated music. |
-| 13 | [HunyuanVideo-Foley](https://github.com/Tencent-Hunyuan/HunyuanVideo-Foley) | **In, for trailers/cutscenes** | Scores a video clip; the worker records gameplay with Godot's Movie Maker first. It makes one synced track, not per-event SFX. Tencent community license: check it for your territory before shipping (`commercial_ok` defaults to false). |
-| 14 | Hunyuan-GameCraft | Out of the pipeline | Outputs *video of* a game, not a game. Fine for a mood or pitch clip if you have 24-80 GB of VRAM. |
-| 15 | Matrix-Game | Out of the pipeline | Same: a real-time world model you can walk around in, but nothing you can ship. |
+| 01 | [Claude-Code-Game-Studios](https://github.com/Donchitos/Claude-Code-Game-Studios) | Borrowed the shape, not the 49 agents | Roles and gates are the right idea; 49 roles is overhead for one person (each agent starts cold and costs tokens). Five roles here. It is a game studio, so most of its skills don't apply. |
+| 02-05 | UnrealClaude, Unreal_mcp, VibeUE, unreal-engine-skills | Out | Unreal can make beautiful real-time renders, but it needs an open editor on a big GPU machine. That's the opposite of "run it from a prompt." |
+| 06 | UnrealGenAISupport | Out | LLMs inside a game. Not relevant to loops or models. |
+| 07 | [Audio2Face-3D](https://github.com/NVIDIA/Audio2Face-3D) | Later, if a clip needs a talking face | Voice to facial animation. The SDK is MIT, the model weights use the NVIDIA Open Model License. |
+| 08 | Unity-MCP, and Unity's official Claude plugin | Out | Unity is a game engine. Worth it only if the deliverable must be interactive or AR. |
+| 09 | ml-agents | Out | Trains game NPCs. |
+| 10 | godot-mcp | Out (was in the game version) | No game engine anymore. |
+| 11 | [CHORD](https://github.com/ubisoft/ubisoft-laforge-chord) | **In** (`pbr` jobs) | One texture image in, base color, normal, height, roughness and metalness maps out, for materials on models. **Research-only license**: the ledger marks its output not for release, and the ship gate blocks it. |
+| 12 | [ACE-Step 1.5](https://github.com/ace-step/ACE-Step-1.5) | **In** (`music` jobs) | Soundtracks for loops. MIT, runs on modest VRAM, model card allows commercial use of generated music. |
+| 13 | [HunyuanVideo-Foley](https://github.com/Tencent-Hunyuan/HunyuanVideo-Foley) | **In** (`foley` jobs) | This is its natural use now: it scores a rendered clip. One synced track for the whole clip (not per-event sounds). Tencent community license: check it for your use before shipping (`commercial_ok` defaults to false). |
+| 14 | Hunyuan-GameCraft | Not wired | Image plus keys in, playable-looking video out. Could produce weirdcore source footage, but needs 24-80 GB VRAM, and its license wasn't confirmed. Treat as an experiment. |
+| 15 | Matrix-Game | Not wired | Same reasoning: a world model you can wander in; not a deliverable pipeline. |
 
-### What the list is missing
-- **3D models.** None of the 15 make meshes, and this is a 3D repo. Added
-  [TRELLIS.2](https://github.com/microsoft/TRELLIS.2) (Microsoft, MIT, image → GLB with PBR).
-- **Reference images.** TRELLIS.2 and CHORD both start from a picture. That part stays yours, from
-  whatever image generator you already use. The technical-artist agent writes a brief per asset in
-  `docs/asset-briefs/`, and you drop the PNG in `game/assets/concept/`.
-- **Interactive SFX.** Foley-from-video is for linear clips. One-shots (jump, hit, pickup) come from a
-  CC0 library or short sliced foley captures.
+### Added, because the list had none
+- **Blender (headless, as the `bpy` module).** The engine for both lanes. Scriptable, so Claude can write it and diff it,
+  runs with no GPU or display, and Cycles gives real chrome reflections. Installs from PyPI in about 30 seconds.
+- **[TRELLIS.2](https://github.com/microsoft/TRELLIS.2)** (Microsoft, MIT): image to GLB, for organic shapes the
+  procedural kit can't do. None of the 15 made 3D models.
+
+### What's still missing
+- **Typography.** Titles and lyrics over loops are common and the kit has no text helper yet. Blender can do it; it needs
+  a font in the repo and a tested helper. The better lane for text-heavy 2D clips may be Remotion (React to video), added
+  as a second engine if you need it.
+- **Reference images for TRELLIS.2 and CHORD.** Those start from a picture; the owner supplies them (`assets/concept/`).
+- Judging taste. The checks catch broken; the art-director agent and you catch generic.
 
 ## GPU machine
 
-Jobs run one at a time, so one 24 GB card (3090/4090) covers everything:
+One 24 GB card (3090/4090) runs every job, one at a time:
 
-| Model | VRAM (reported) | OS | License | Ship output? |
-|---|---|---|---|---|
-| ACE-Step 1.5 | under 4 GB claimed, auto-offload below 16 GB | Win / Linux / Mac | MIT | yes |
-| TRELLIS.2 | ~24 GB | Linux only (use WSL2 on Windows) | MIT | yes |
-| CHORD | see repo | see repo | Ubisoft ML License, research-only | **no** |
-| HunyuanVideo-Foley | ~20 GB, ~12 GB with offload | Linux / Win | Tencent Hunyuan Community | check terms |
+| Job | Tool | VRAM (reported) | OS | License | Ship output? |
+|---|---|---|---|---|---|
+| `render` | Blender Cycles (OptiX/CUDA) | any NVIDIA card works | Win / Linux / Mac | GPL (output is yours) | yes |
+| `music` | ACE-Step 1.5 | under 4 GB claimed, offloads below 16 GB | Win / Linux / Mac | MIT | yes |
+| `mesh` | TRELLIS.2 | ~24 GB | Linux only (WSL2 on Windows) | MIT | yes |
+| `pbr` | CHORD | see repo | see repo | Ubisoft ML License, research-only | **no** |
+| `foley` | HunyuanVideo-Foley | ~20 GB, ~12 GB with offload | Linux / Win | Tencent Hunyuan Community | check terms |
 
 Setup:
-1. Clone this repo on the GPU machine, install each model per its README.
-2. `cp pipeline/worker.example.toml pipeline/worker.toml`, then fill in `cwd` and `command` for each model
-   (the `REPLACE_ME` entries are deliberate; the worker refuses to run them).
-3. `python3 pipeline/assets.py work --watch`. It pulls, runs pending jobs, commits the assets and ledger, and pushes.
-4. Set `branch` in `worker.toml` to the branch your Claude sessions push to.
+1. Clone this repo on the GPU machine and run `scripts/install-blender.sh`.
+2. Install the AI models you want, each per its README.
+3. `cp pipeline/worker.example.toml pipeline/worker.toml` and fill in `cwd` and `command` for each model (the `REPLACE_ME`
+   entries are deliberate: these CLIs change between releases, so the worker refuses to run one you didn't set).
+   The `render` job needs no model config.
+4. `python3 pipeline/assets.py work --watch`. It pulls, runs pending jobs, commits the results and the ledger, and pushes.
+   Set `branch` in `worker.toml` to the branch your Claude sessions push to.
 
-Without a GPU worker everything still runs on placeholders; `python3 pipeline/assets.py status`
-shows what's waiting.
+Without a worker, previews and small renders run on the CPU, and AI assets are placeholders at their final paths.
+`python3 pipeline/assets.py status` shows what's waiting.
 
-## Why Godot and not Unity
+## Cost reality
 
-Godot is the only one of the three that runs fully headless on a Linux box with no license: import,
-test and export all work in a cloud session and in CI (verified with 4.6.3). Scenes are plain text, so
-Claude can diff and review them. Unity now has an official Claude Code plugin
-(`claude plugin install unity@unity-agent-plugin`) and is a good choice if you already know it, but it
-expects an open, licensed Editor, so less of the loop runs without you.
+Measured on 4 CPU cores: about 8 s per 540 px frame at 32 samples, so a 96-frame preview-quality loop takes ~15 minutes
+and a 1080 px, 96-sample version would take hours. That's the reason finals are GPU jobs.
 
 ## What stays human
 
-Concept choice and the feel of the vertical slice (gates A and B, unless you run auto mode), reference
-images, license calls on Foley and anything Tencent-licensed, and pressing release. Headless tests prove
-the game works. They can't tell you it's fun.
+Choosing a direction, approving the files, reference images, license calls on anything Tencent- or Ubisoft-licensed, and
+posting or selling. The agents can tell you the render is broken or the loop doesn't close. They can't tell you it slaps.

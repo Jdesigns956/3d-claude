@@ -3,17 +3,18 @@
 Read and updated by the `/studio` skill so any session can pick up where the last one stopped.
 
 ```yaml
-stage: pitch            # pitch | concept | design | build | slice-review | ship | released
-mode: guided            # guided: human decides gates A and B | auto: creative-director decides them
-pitch: ""
-concept: ""
-current_milestone: ""
+stage: brief            # brief | concept | build | review | deliver | done
+mode: guided            # guided: human decides Gate A | auto: art-director decides it
+kind: ""                # motion | model | both
+brief: ""
+slug: ""
+direction: ""
+piece: ""
 gates:
-  A_concept: pending
-  B_vertical_slice: pending
+  A_direction: pending
   C_release: pending
 ```
 
 ## Log
 
-- Studio set up: Godot 4.6.3 starter (third-person controller + smoke test), asset pipeline, CI.
+- Studio set up: Blender (headless) kit, two sample pieces (chrome_mandala_loop, mandala_medallion), asset and render queue.

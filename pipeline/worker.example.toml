@@ -5,18 +5,24 @@
 #   {output}                        music, foley, mesh: the file the model must write
 #   {output_dir}                    pbr: the folder the maps must land in
 #   {image}                         mesh, pbr: reference picture from the job
-#   {video}                         foley: a clip from the repo, or a fresh Godot capture
+#   {video}                         foley: the clip to score (a rendered deliverable from the repo)
 #   {anything}                      any --param anything=value the job was queued with
 #
 # The REPLACE_ME commands are deliberate: these repos change their CLI between releases, so copy
 # the inference command from each README you installed. The worker refuses to run a REPLACE_ME.
-# Jobs run one at a time, so a single 24 GB card (3090/4090) covers every model below.
+# Jobs run one at a time, so a single 24 GB card (3090/4090) covers every model below, plus Blender renders.
 
 [worker]
 poll_seconds = 30
 git_sync = true        # pull jobs and push results through this checkout
 branch = ""            # empty = the checked-out branch; set it to the branch your sessions push to
-godot = "godot"        # used to record gameplay clips for foley jobs (needs a display/GPU)
+
+# Final renders of Blender pieces (job type "render"). Needs scripts/install-blender.sh run once on this machine.
+# Cycles uses OptiX/CUDA on NVIDIA cards (HIP on AMD, Metal on Mac). Falls back to CPU if no GPU is found.
+[render]
+device = "gpu"
+# python = ""          # empty = this repo's .tools/venv
+timeout_minutes = 180
 
 [models.music]
 name = "ACE-Step 1.5"
@@ -48,4 +54,5 @@ license = "Tencent Hunyuan Community License"
 commercial_ok = false  # flip to true only after you've read the license for your territory and scale
 cwd = "C:/ai/HunyuanVideo-Foley"
 command = ["python", "REPLACE_ME.py", "--video", "{video}", "--prompt", "{prompt}", "--output", "{output}"]
+# Foley makes one soundtrack synced to the whole clip. Queue it after the clip's render job (jobs run oldest first).
 timeout_minutes = 20

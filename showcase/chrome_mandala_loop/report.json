@@ -1,0 +1,22 @@
+{
+  "piece": "chrome_mandala_loop",
+  "mode": "final",
+  "kind": "motion",
+  "size": [
+    540,
+    540
+  ],
+  "frames": 96,
+  "files": {
+    "mp4": "showcase/chrome_mandala_loop/chrome_mandala_loop.mp4",
+    "gif": "showcase/chrome_mandala_loop/chrome_mandala_loop.gif",
+    "hero": "showcase/chrome_mandala_loop/hero.png"
+  },
+  "loop": {
+    "step_diff": 0.02379,
+    "seam_diff": 0.00018
+  },
+  "issues": [],
+  "status": "OK",
+  "seconds": 1047.8
+}

@@ -1,31 +1,23 @@
 ---
 name: concept
-description: Turn a pitch into three genuinely different game concepts sized for this pipeline, for the human to choose from (Gate A). Use for "/concept <pitch>" or when the studio is at the concept stage.
+description: "Turn a brief into three genuinely different directions as a rendered concept sheet, for the human to choose from (Gate A). Use for \"/concept <brief>\", \"show me options\", or when the studio is at the concept stage."
 ---
 
-# Concepts
+# Concept sheet
 
-Pitch: $ARGUMENTS (if empty, use the pitch in `docs/STUDIO_STATE.md`)
+Brief: $ARGUMENTS (default: `docs/briefs/` for the current slug)
 
-Write three concepts to `docs/concepts/1-<slug>.md`, `2-<slug>.md`, `3-<slug>.md`. They must differ in
-**core verb, camera and tone**, not just theme or color. Each gets its own palette identity (hex values),
-not a recolor of the others.
+1. Three directions that differ in **composition, central symbol and mood**, not just color. Give each its own palette
+   identity (`docs/TASTE.md`). If two only differ by palette, replace one.
+2. Build each as a quick piece, `pieces/<slug>_a.py`, `_b.py`, `_c.py`: rough is fine, but real geometry and a real
+   palette, because the sheet is what the human judges. Delegate to `motion-designer` or `modeler`, one per direction
+   (they can run in parallel).
+3. Render the first frame of each: `.tools/venv/bin/python studio/run.py <piece> --mode preview --quick`. Open the images
+   yourself; fix anything broken or muddy before it goes on the sheet.
+4. Tile them: `python3 studio/sheet.py docs/briefs/<slug>/sheet.png <a>.png <b>.png <c>.png --labels "A  <name>" "B  <name>" "C  <name>"`.
+5. `art-director` writes `docs/briefs/<slug>/directions.md`: one paragraph per direction (symbol, palette with hex, motion
+   or form idea, risk) and a recommendation with the reason.
 
-Each file:
-- Title and one-line hook
-- Core verb and 30-second loop
-- Camera and controls
-- Why it's fun (the specific tension or payoff)
-- Look: palette (5 hex values with roles), materials, the one image that sells it
-- Sound: music direction in ACE-Step tag style
-- Scope: milestones to a vertical slice (aim for 3-4), asset count by type (mesh / pbr / music / foley)
-- Pipeline fit: what TRELLIS.2, CHORD, ACE-Step and foley each contribute; what would need hand work
-- Biggest risk and how M1 tests it
-
-Then write `docs/concepts/README.md`: a comparison table and your recommendation with the reason.
-
-Use the `creative-director` agent to review the three for genericness and scope before presenting.
-
-**Gate A**: present the table and recommendation, ask which one (or which mix). In `mode: auto`,
-the creative-director picks and logs the reason in `docs/STUDIO_STATE.md`. Record the choice as
-`concept:` in the state file.
+**Gate A**: show the sheet and the recommendation and ask which direction (or which mix). In `mode: auto`
+the art-director picks and logs the reason. Delete the directions that lost: `git rm pieces/<slug>_b.py pieces/<slug>_c.py`
+(the chosen one is renamed to `pieces/<slug>.py` and becomes the piece to build). Record `direction:` in the state file.

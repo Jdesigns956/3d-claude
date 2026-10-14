@@ -1,0 +1,26 @@
+name: studio
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/cache@v4
+        with:
+          path: .tools/venv
+          key: blender-${{ hashFiles('scripts/bpy-version.txt') }}
+      - name: Install headless Blender
+        run: scripts/install-blender.sh
+      - name: Studio check (tests, every piece builds and passes QA)
+        run: scripts/check.sh
+      - name: Asset license report
+        run: python3 pipeline/assets.py gate

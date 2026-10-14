@@ -1,14 +1,13 @@
-# Godot
-game/.godot/
-build/
-
 # Local tools and machine config
 .tools/
 pipeline/worker.toml
 pipeline/jobs/running/
 __pycache__/
 
+# Working renders (frames, contact sheets, exports). Anything worth keeping goes to showcase/ or deliverables/.
+output/
+
 # Hook state
-.claude/.game-dirty
+.claude/.studio-dirty
 .claude/.stop-gate-attempts
 .claude/settings.local.json

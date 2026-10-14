@@ -1,0 +1,29 @@
+{
+  "piece": "mandala_medallion",
+  "mode": "preview",
+  "kind": "model",
+  "size": [
+    540,
+    540
+  ],
+  "frames": 120,
+  "files": {
+    "glb": "showcase/mandala_medallion/mandala_medallion.glb",
+    "stl": "showcase/mandala_medallion/mandala_medallion.stl",
+    "obj": "showcase/mandala_medallion/mandala_medallion.obj",
+    "contact_sheet": "showcase/mandala_medallion/contact_sheet.png"
+  },
+  "issues": [],
+  "status": "OK",
+  "seconds": 71.0,
+  "mesh": {
+    "tris": 160592,
+    "objects": 36,
+    "size": [
+      44.2,
+      49.95,
+      11.4
+    ],
+    "unit": "mm"
+  }
+}

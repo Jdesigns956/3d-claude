@@ -1,39 +1,40 @@
 ---
 name: studio
-description: Studio autopilot. Takes a game from pitch to exported build by running the concept, gdd, milestone, asset-jobs, playtest and ship stages in order, stopping only at human gates. Use for "/studio <pitch>", "/studio auto <pitch>", "/studio" (continue), "keep building the game", or "next milestone".
+description: "Studio autopilot for motion graphics and 3D models. Takes a one-line brief to delivered files by running the concept, motion or model, review and deliver stages, stopping only at human gates. Use for \"/studio <brief>\", \"/studio auto <brief>\", \"/studio\" (continue), \"make me a loop of ...\", \"make a 3D model of ...\"."
 ---
 
 # Studio autopilot
 
 Arguments: $ARGUMENTS
 
-All state lives in `docs/STUDIO_STATE.md` (committed, so any session can resume). Read it first.
+State lives in `docs/STUDIO_STATE.md` (committed, so any session can resume). Read it first.
 
 ## Start or resume
-- Arguments contain a pitch and the state is `stage: pitch` → record the pitch. If the arguments start
-  with `auto`, set `mode: auto`; otherwise `mode: guided`.
+- A brief in the arguments with state `stage: brief` → record it. Starting with `auto` sets `mode: auto`
+  (the `art-director` agent decides Gate A and logs why); otherwise `mode: guided`.
 - No arguments → continue from the recorded stage.
-- `mode: auto` is the user asking for maximum automation: the `creative-director` agent decides Gates A
-  and B and logs why. Gate C (release) is always the human's.
+- Decide the kind from the brief: "loop", "visual", "animation", "VJ", "clip" is motion; "model", "charm",
+  "pendant", "print", "STL" is model; both is allowed (one piece each, shared palette identity is optional).
 
 ## Stages
 | stage | do | ends with |
 |---|---|---|
-| pitch → concept | run the `concept` skill | **Gate A**: human picks a concept (auto: creative-director picks) |
-| design | run the `gdd` skill | GDD, style bible, milestones committed |
-| build | for the next unfinished milestone: `milestone` skill, then `asset-jobs`, then `playtest` | milestone marked done |
-| slice review | after the milestone the GDD calls the vertical slice | **Gate B**: human plays the build using `docs/PLAYTEST.md` (auto: creative-director reviews the playtest report) |
-| build (cont.) | remaining milestones, same loop | all milestones done |
-| ship | run the `ship` skill | **Gate C**: human approves release. Never upload anywhere. |
+| brief | `art-director` writes `docs/briefs/<slug>.md` (see its instructions) | brief committed |
+| concept | run the `concept` skill | **Gate A**: human picks a direction (auto: art-director picks) |
+| build | run the `motion` skill (motion) or `model` skill (model) on the chosen direction | piece passes preview + art-director review |
+| review | run the `review` skill | PASS from `qa-reviewer` |
+| deliver | run the `deliver` skill | **Gate C**: human approves release of the files. Never upload or post anywhere. |
+
+There is no Gate B here; the human sees the contact sheet at Gate A and the finals at Gate C. If the brief is large
+(a set of pieces), repeat build, review and deliver per piece and keep the list in the state file.
 
 ## Rules for the loop
-- Keep going stage after stage without asking, until a gate, a blocker, or the end. At a gate, stop
-  and present exactly what the human must decide, with your recommendation.
-- After each stage: update `docs/STUDIO_STATE.md` (stage, current milestone, gate results, a one-line
-  log entry), then commit with a message like `studio: M2 combat loop done`. Push if the session
-  normally pushes.
-- `scripts/check.sh` must pass before any commit that touches `game/`. The Stop hook enforces this.
-- Missing reference images or a GPU worker never block the build: placeholders stand in, and the stage
-  notes what the human should provide.
-- If something can't be automated (feel, art taste, license calls), say so and put it in the gate
-  summary instead of guessing.
+- Keep going stage to stage without asking, until a gate, a blocker, or the end. At a gate, stop and present exactly what
+  the human must decide, with your recommendation and the image to look at.
+- After each stage update `docs/STUDIO_STATE.md` (stage, mode, choices, one log line) and commit
+  (`studio: chrome mandala loop - build done`). Push if the session normally pushes.
+- `scripts/check.sh` must pass before any commit that touches `studio/`, `pieces/` or `pipeline/`. The Stop hook enforces it.
+- Look at your own renders (open the PNG contact sheets) before showing anything. Don't hand over something you wouldn't pick.
+- Missing GPU worker or reference images never block the work: previews run on CPU, placeholders stand in, and the
+  stage notes what the human needs to provide.
+- What can't be automated (taste, license calls, release) goes in the gate summary. Don't guess.

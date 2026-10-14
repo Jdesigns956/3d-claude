@@ -1,5 +1,5 @@
 #!/bin/bash
-# SessionStart (cloud sessions only): install the pinned Godot so the hooks, smoke test and godot MCP work.
+# SessionStart (cloud sessions only): install headless Blender (the pinned bpy module) so renders and checks work.
 set -euo pipefail
 
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
@@ -7,13 +7,8 @@ if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
 fi
 
 cd "$CLAUDE_PROJECT_DIR"
-bin="$(scripts/install-godot.sh)"
+py="$(scripts/install-blender.sh)"
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
-  echo "export GODOT=\"$bin\"" >> "$CLAUDE_ENV_FILE"
+  echo "export STUDIO_PY=\"$py\"" >> "$CLAUDE_ENV_FILE"
 fi
-# Build the import cache once so the first check is fast.
-"$bin" --headless --path game --import >/dev/null 2>&1 || true
-# Pre-fetch the godot MCP server so it starts without a download.
-npm cache add @coding-solo/godot-mcp >/dev/null 2>&1 || true
-
-echo "Godot $(cat scripts/godot-version.txt) ready. Run scripts/check.sh to verify the game."
+echo "Blender $("$py" -c 'import bpy; print(bpy.app.version_string)' 2>/dev/null) ready. Run scripts/check.sh to verify the studio."
