@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_0wfyh"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_jyhfs"]
+
+[sub_resource type="Sky" id="Sky_tbgi4"]
+sky_material = SubResource("ProceduralSkyMaterial_jyhfs")
+
+[sub_resource type="Environment" id="Environment_tefeu"]
+background_mode = 2
+sky = SubResource("Sky_tbgi4")
+tonemap_mode = 2
+
+[sub_resource type="BoxMesh" id="BoxMesh_o6xl0"]
+size = Vector3(40, 1, 40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tipki"]
+size = Vector3(40, 1, 40)
+
+[node name="Main" type="Node3D" unique_id=2048988486]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=246184081]
+environment = SubResource("Environment_tefeu")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=285912216]
+transform = Transform3D(0.8253356, -0.44229966, 0.3509874, 0, 0.62161, 0.7833269, -0.5646425, -0.6465076, 0.51303685, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Ground" type="StaticBody3D" parent="." unique_id=1750963331]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Ground" unique_id=2138412249]
+mesh = SubResource("BoxMesh_o6xl0")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground" unique_id=353230545]
+shape = SubResource("BoxShape3D_tipki")
+
+[node name="Player" type="CharacterBody3D" parent="." unique_id=1886130417 instance=ExtResource("1_0wfyh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)

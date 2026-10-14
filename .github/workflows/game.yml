@@ -1,0 +1,81 @@
+name: game
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: .tools/godot
+          key: godot-${{ hashFiles('scripts/godot-version.txt') }}
+      - name: Install Godot
+        run: |
+          scripts/install-godot.sh
+          echo "$PWD/.tools/godot" >> "$GITHUB_PATH"
+      - name: Pipeline tests
+        run: python3 -m unittest discover -s pipeline/tests -v
+      - name: Game check (import, parse, smoke test)
+        run: scripts/check.sh
+      - name: Asset license report
+        run: python3 pipeline/assets.py gate
+
+  export:
+    # Tags build release candidates; "Run workflow" builds test exports that may contain placeholders.
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Ship gate (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: python3 pipeline/assets.py gate --ship
+      - uses: actions/cache@v4
+        with:
+          path: .tools/godot
+          key: godot-${{ hashFiles('scripts/godot-version.txt') }}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates
+          key: godot-templates-${{ hashFiles('scripts/godot-version.txt') }}
+      - name: Install Godot and export templates
+        run: |
+          scripts/install-godot.sh
+          echo "$PWD/.tools/godot" >> "$GITHUB_PATH"
+          scripts/install-export-templates.sh
+      - name: Export
+        run: |
+          mkdir -p build/linux build/windows
+          godot --headless --path game --import
+          godot --headless --path game --export-release "Linux" ../build/linux/3d-claude.x86_64
+          godot --headless --path game --export-release "Windows" ../build/windows/3d-claude.exe
+      - name: Smoke the exported binary
+        run: |
+          build/linux/3d-claude.x86_64 --headless --quit-after 300 2>&1 | tee run.log
+          ! grep -E "SCRIPT ERROR|^ERROR:" run.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: builds
+          path: build/
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/linux/3d-claude.x86_64
+            build/windows/3d-claude.exe

@@ -1,0 +1,51 @@
+# Copy to pipeline/worker.toml on the GPU machine (worker.toml is gitignored) and fill in the paths.
+#
+# Each [models.<type>] runs as a plain argument list, no shell. Placeholders:
+#   {prompt} {seed} {work_dir}      always
+#   {output}                        music, foley, mesh: the file the model must write
+#   {output_dir}                    pbr: the folder the maps must land in
+#   {image}                         mesh, pbr: reference picture from the job
+#   {video}                         foley: a clip from the repo, or a fresh Godot capture
+#   {anything}                      any --param anything=value the job was queued with
+#
+# The REPLACE_ME commands are deliberate: these repos change their CLI between releases, so copy
+# the inference command from each README you installed. The worker refuses to run a REPLACE_ME.
+# Jobs run one at a time, so a single 24 GB card (3090/4090) covers every model below.
+
+[worker]
+poll_seconds = 30
+git_sync = true        # pull jobs and push results through this checkout
+branch = ""            # empty = the checked-out branch; set it to the branch your sessions push to
+godot = "godot"        # used to record gameplay clips for foley jobs (needs a display/GPU)
+
+[models.music]
+name = "ACE-Step 1.5"
+license = "MIT"
+commercial_ok = true   # model card says generated music may be used commercially
+cwd = "C:/ai/ACE-Step-1.5"
+command = ["python", "REPLACE_ME.py", "--prompt", "{prompt}", "--duration", "{duration}", "--output", "{output}"]
+timeout_minutes = 15
+
+[models.mesh]
+name = "TRELLIS.2"
+license = "MIT"
+commercial_ok = true
+cwd = "/home/you/TRELLIS.2"   # Linux only (CUDA extensions); on Windows run the worker inside WSL2
+command = ["python", "REPLACE_ME.py", "--image", "{image}", "--output", "{output}"]
+timeout_minutes = 20
+
+[models.pbr]
+name = "CHORD (Ubisoft La Forge)"
+license = "Ubisoft ML License, research-only"
+commercial_ok = false  # fine for prototyping; the ship gate blocks these until you replace them
+cwd = "C:/ai/ubisoft-laforge-chord"
+command = ["python", "REPLACE_ME.py", "--input", "{image}", "--output-dir", "{output_dir}"]
+timeout_minutes = 10
+
+[models.foley]
+name = "HunyuanVideo-Foley"
+license = "Tencent Hunyuan Community License"
+commercial_ok = false  # flip to true only after you've read the license for your territory and scale
+cwd = "C:/ai/HunyuanVideo-Foley"
+command = ["python", "REPLACE_ME.py", "--video", "{video}", "--prompt", "{prompt}", "--output", "{output}"]
+timeout_minutes = 20
